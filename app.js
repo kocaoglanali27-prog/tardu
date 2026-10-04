@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    tardu — Firebase (Auth + Realtime Database) destekli uygulama
    ============================================================ */
 (() => {
@@ -17,6 +17,10 @@ const firebaseConfig = {
 };
 
 let FB_OK = false, FAuth = null, RDB = null, SV = null;
+
+/* ----- site sahibinin IBAN bilgileri (BURAYI KENDİ BİLGİLERİNLE DEĞİŞTİR) ----- */
+const OWNER_NAME = 'TARDU PAZAR';
+const OWNER_IBAN = 'TR00 0000 0000 0000 0000 0000 00';
 try{
   firebase.initializeApp(firebaseConfig);
   FAuth = firebase.auth();
@@ -113,14 +117,14 @@ function toast(msg, kind, ico){
 /* ---------- modal ---------- */
 let activeModal = null, pendingPage = null;
 function openModal(id){
-  if (activeModal && activeModal !== id) $(activeModal).classList.remove('on');
+  if (activeModal && activeModal !== id) $id(activeModal).classList.remove('on');
   activeModal = id;
-  $(id).classList.add('on');
+  $id(id).classList.add('on');
   $id('scrim').classList.add('on');
 }
 function closeModal(){
   if (!activeModal) return;
-  $(activeModal).classList.remove('on');
+  $id(activeModal).classList.remove('on');
   $id('scrim').classList.remove('on');
   activeModal = null;
 }
@@ -239,7 +243,7 @@ function render(p){
     $id('kHit').textContent = new Intl.NumberFormat('tr-TR').format(mine.reduce((t, x) => t + (x.views || 0), 0));
   }
   if (p === 'favorilerim') paint($id('favGrid'), listFor('favorilerim'), cardHTML);
-  if (p === 'mesajlarim') renderThreads();
+  if (p === 'mesajlarim'){ renderThreads(); moveMsgTabInd(); }
   if (p === 'cuzdanim'){
     $id('walletBig').textContent = money(profile ? profile.balance || 0 : 0);
     $id('txList').innerHTML = txList.length ? txList.map(t =>
@@ -695,20 +699,133 @@ function renderThreads(){
   renderThreadBody(t);
 }
 
-/* ---------- cüzdan ---------- */
+/* ---------- mesaj sekmeleri: DM + genel sohbet ---------- */
+let mtab = 'dm';
+function moveMsgTabInd(){
+  const on = $('#msgTabs .tab.is-on'), ind = $('#msgTabs .tab-ind');
+  if (!on || !ind) return;
+  ind.style.width = on.offsetWidth + 'px';
+  ind.style.transform = 'translateX(' + on.offsetLeft + 'px)';
+}
+function switchMtab(t){
+  mtab = t;
+  $$('#msgTabs .tab').forEach(x => x.classList.toggle('is-on', x.dataset.mtab === t));
+  $id('dmWrap').hidden = t !== 'dm';
+  $id('genWrap').hidden = t !== 'gen';
+  moveMsgTabInd();
+  if (t === 'gen') renderGeneral();
+}
+let genMsgs = [], genQuery = null;
+function attachGeneral(){
+  if (!FB_OK || genQuery || !fbUser) return;
+  genQuery = RDB.ref('general').orderByChild('at').limitToLast(60);
+  genQuery.on('value', snap => {
+    const v = snap.val() || {};
+    genMsgs = Object.keys(v).map(k => v[k]).sort((a, b) => (a.at || 0) - (b.at || 0));
+    if (mtab === 'gen' && page === 'mesajlarim') renderGeneral();
+    $id('genCount').textContent = genMsgs.length ? genMsgs.length + ' mesaj · tardu üyeleri burada' : 'tardu üyeleri burada';
+  }, () => { genQuery = null; });
+}
+function detachGeneral(){
+  if (genQuery){ genQuery.off(); genQuery = null; }
+  genMsgs = [];
+}
+function renderGeneral(){
+  const body = $id('genBody');
+  if (!genMsgs.length){
+    body.innerHTML = '<div class="msg-sys">Henüz mesaj yok. İlk yazan sen ol.</div>';
+    return;
+  }
+  body.innerHTML = genMsgs.map(m => {
+    const isMe = fbUser && m.uid === uid();
+    return '<div class="msg ' + (isMe ? 'me' : 'them') + '">' +
+      (isMe ? '' : '<span class="gen-name">' + esc(m.uname || 'üye') + '</span>') +
+      esc(m.text) + '<time>' + (m.at ? hhmm(m.at) : '') + '</time></div>';
+  }).join('');
+  body.scrollTop = body.scrollHeight;
+}
+async function sendGeneral(text){
+  if (!needFB()) return;
+  if (!fbUser || !profile){ pendingPage = 'mesajlarim'; openAuthWall('Genel sohbete katılmak için giriş yap.'); return; }
+  text = (text || '').trim();
+  if (!text) return;
+  try{ await RDB.ref('general').push({ uid:uid(), uname:profile.user, text:text.slice(0, 300), at:SV.TIMESTAMP }); }
+  catch(e){ toast('Mesaj gönderilemedi.', 'err', 'x'); }
+}
+
+/* ---------- cüzdan (IBAN ile yatırma / çekme talebi) ---------- */
+const myRefCode = () => 'TARDU-' + String(uid() || 'XXXXXX').slice(0, 6).toUpperCase();
 async function walletAsk(kind){
-  if (!fbUser) return;
-  const v = Math.round(+(prompt(kind === 'in' ? 'Kaç TL yatırmak istiyorsun?' : 'Kaç TL çekmek istiyorsun?', '500')) || 0);
-  if (!v || v <= 0) return;
-  if (kind === 'out' && v > (profile.balance || 0)) return toast('Bakiyenden fazla çekemezsin.', 'err', 'wallet');
+  if (!fbUser || !needFB()) return;
+  openMoney(kind);
+}
+function openMoney(kind){
+  $id('moneyTitle').textContent = kind === 'in' ? 'Para yatır' : 'Para çek';
+  moneyAmountStep(kind);
+  openModal('mMoney');
+}
+function moneyAmountStep(kind){
+  const B = $id('moneyBody'), F = $id('moneyFoot');
+  if (kind === 'in'){
+    B.innerHTML =
+      '<label class="field"><span>Yatırmak istediğin tutar (TL) <i>*</i></span>' +
+      '<div class="input-money"><span>₺</span><input id="mAmount" inputmode="numeric" placeholder="0" /></div></label>' +
+      '<div class="money-note">Havale / EFT ile site sahibinin IBAN adresine gönderim yapacaksın. Sonraki adımda IBAN ve açıklama kodu gösterilecek.</div>';
+    F.innerHTML = '<button class="btn ghost" id="mCancel">Vazgeç</button><button class="btn primary" id="mNext"><span>Devam et</span></button>';
+  } else {
+    B.innerHTML =
+      '<label class="field"><span>Çekmek istediğin tutar (TL) <i>*</i></span>' +
+      '<div class="input-money"><span>₺</span><input id="mAmount" inputmode="numeric" placeholder="0" /></div></label>' +
+      '<label class="field"><span>Paranın geleceği IBAN <i>*</i></span><input id="mIban" placeholder="TR__ ____ ____ ____ ____ ____ __" /></label>' +
+      '<div class="money-note">Talebin site sahibine iletilir. Mevcut bakiyen: <b>' + money(profile ? profile.balance || 0 : 0) + '</b></div>';
+    F.innerHTML = '<button class="btn ghost" id="mCancel">Vazgeç</button><button class="btn primary" id="mNext"><span>Talebi gönder</span></button>';
+  }
+  $id('mCancel').onclick = closeModal;
+  $id('mNext').onclick = () => {
+    const v = Math.round(+($id('mAmount').value || '').replace(/[^0-9]/g, '') || 0);
+    if (!v || v < 10) return toast('En az 10 TL olmalı.', 'err', 'coins');
+    if (kind === 'in') moneyIbanStep(v);
+    else {
+      const iban = ($id('mIban').value || '').trim();
+      if (iban.replace(/\s/g, '').length < 15) return toast('Geçerli bir IBAN gir.', 'err', 'x');
+      submitWithdraw(v, iban);
+    }
+  };
+  setTimeout(() => { const a = $id('mAmount'); if (a) a.focus(); }, 200);
+}
+function moneyIbanStep(amount){
+  const B = $id('moneyBody'), F = $id('moneyFoot');
+  const ref = myRefCode();
+  B.innerHTML =
+    '<div class="money-note">Aşağıdaki IBAN adresine <b>' + money(amount) + '</b> gönder. Açıklama kısmına kodu yazmayı unutma, yoksa ödemen eşleşmez.</div>' +
+    '<label class="field"><span>Alıcı</span><input value="' + esc(OWNER_NAME) + '" readonly tabindex="-1" /></label>' +
+    '<label class="field"><span>IBAN</span><div class="iban-box"><code>' + esc(OWNER_IBAN) + '</code>' +
+    '<button class="copy-btn" id="mCopy">' + icon('coins') + 'Kopyala</button></div></label>' +
+    '<label class="field"><span>Açıklama kodu</span><span class="ref-code">' + esc(ref) + '</span></label>';
+  F.innerHTML = '<button class="btn ghost" id="mBack">Geri</button><button class="btn primary" id="mDone"><span>Parayı gönderdim</span></button>';
+  $id('mBack').onclick = () => moneyAmountStep('in');
+  $id('mCopy').onclick = async () => {
+    try{ await navigator.clipboard.writeText(OWNER_IBAN.replace(/\s/g, '')); toast('IBAN kopyalandı.', 'ok', 'check'); }
+    catch(e){ toast('Kopyalanamadı, IBANı elle seçip kopyala.', 'err', 'x'); }
+  };
+  $id('mDone').onclick = () => submitDeposit(amount, ref);
+}
+async function submitDeposit(amount, ref){
   try{
-    const balRef = RDB.ref('users/' + uid() + '/balance');
-    const res = await balRef.transaction(b => { b = b || 0; if (kind === 'out' && b < v) return; return kind === 'in' ? b + v : b - v; });
-    if (!res.committed) return toast('Bakiyenden fazla çekemezsin.', 'err', 'wallet');
-    await RDB.ref('users/' + uid() + '/tx').push({ t:kind === 'in' ? 'Para yatırıldı' : 'Para çekildi',
-      v:kind === 'in' ? v : -v, d:'tardu cüzdan', at:SV.TIMESTAMP });
-    toast(kind === 'in' ? money(v) + ' yatırıldı' : money(v) + ' çekildi', 'ok', 'check');
-  }catch(e){ toast('İşlem başarısız.', 'err', 'x'); }
+    await RDB.ref('deposits/' + uid()).push({ type:'in', amount, ref, at:SV.TIMESTAMP, status:'pending' });
+    await RDB.ref('users/' + uid() + '/tx').push({ t:'Yatırma talebi — ' + money(amount) + ' (onay bekleniyor)', v:0, d:'Açıklama: ' + ref, at:SV.TIMESTAMP });
+    closeModal();
+    toast('Talebin alındı. Onay sonrası bakiyene eklenecek.', 'ok', 'check');
+  }catch(e){ toast('Talep gönderilemedi.', 'err', 'x'); }
+}
+async function submitWithdraw(amount, iban){
+  if (amount > (profile.balance || 0)) return toast('Bakiyenden fazla çekemezsin.', 'err', 'wallet');
+  try{
+    await RDB.ref('deposits/' + uid()).push({ type:'out', amount, iban, at:SV.TIMESTAMP, status:'pending' });
+    await RDB.ref('users/' + uid() + '/tx').push({ t:'Çekim talebi — ' + money(amount) + ' (onay bekleniyor)', v:0, d:'IBAN: ' + iban.slice(0, 12) + '…', at:SV.TIMESTAMP });
+    closeModal();
+    toast('Talebin alındı. Onay sonrası gönderim yapılacak.', 'ok', 'check');
+  }catch(e){ toast('Talep gönderilemedi.', 'err', 'x'); }
 }
 function clearTx(){
   toast('İşlem geçmişi sunucuda tutulur, silinemez.', 'info', 'coins');
@@ -955,7 +1072,8 @@ function init(){
       detachUser();
       profile = null; favs = {}; txList = []; threadCache = {}; myTids = [];
       openThreadId = null;
-      if (u) attachUser(u.uid);
+      if (u){ attachUser(u.uid); attachGeneral(); }
+      else { detachGeneral(); }
       applyLockState();
       paintAccount();
       render(page);
@@ -973,6 +1091,7 @@ function init(){
   $$('.nav-i').forEach(b => b.addEventListener('click', () => go(b.dataset.page)));
   $$('.tabbar .t-i').forEach(b => b.addEventListener('click', () => go(b.dataset.page)));
   $$('.tabs .tab').forEach(t => t.addEventListener('click', () => { tab = t.dataset.tab; render('ilanlarim'); }));
+  $$('#msgTabs .tab').forEach(t => t.addEventListener('click', () => switchMtab(t.dataset.mtab)));
   $id('sbToggle').onclick = () => setCollapsed(!uiState.collapsed);
   $id('burger').onclick = () => document.body.classList.toggle('sb-open');
   $id('sbScrim').onclick = closeDrawer;
@@ -1042,6 +1161,13 @@ function init(){
     sendMessage(v);
     $id('msgInput').value = '';
   });
+  $id('genForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = $id('genInput').value.trim();
+    if (!v) return;
+    sendGeneral(v);
+    $id('genInput').value = '';
+  });
   $id('threadBack').onclick = () => { $id('threadView').classList.remove('is-open'); openThreadId = null; renderThreads(); };
   $id('thListingBtn').onclick = () => { const t = threadCache[openThreadId]; if (t) detail(t.listingId); };
 
@@ -1105,8 +1231,8 @@ function init(){
     }
   });
 
-  addEventListener('resize', () => { movePill(); moveTabInd(); }, { passive:true });
-  requestAnimationFrame(() => { movePill(); moveTabInd(); });
+  addEventListener('resize', () => { movePill(); moveTabInd(); moveMsgTabInd(); }, { passive:true });
+  requestAnimationFrame(() => { movePill(); moveTabInd(); moveMsgTabInd(); });
 }
 document.addEventListener('DOMContentLoaded', init);
 
