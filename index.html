@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#08090d" />
+<title>tardu — Oyun Hesabı Pazarı</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230b0d14'/%3E%3Cpath d='M9 11v10l7-5 7 5V11' stroke='%23a78bfa' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+</head>
+<body>
+
+<!-- ====== İKON SETİ (emoji yok) ====== -->
+<svg class="sprite" aria-hidden="true" focusable="false"><defs>
+  <g id="i-compass"><circle cx="12" cy="12" r="9"/><path d="M15.6 8.4l-2 5.2-5.2 2 2-5.2z"/></g>
+  <g id="i-box"><path d="M3 7.5l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4M3 16.5l9 4 9-4"/></g>
+  <g id="i-heart"><path d="M12 20s-7.5-4.6-7.5-9.6A4.4 4.4 0 0 1 12 7.4a4.4 4.4 0 0 1 7.5 3C19.5 15.4 12 20 12 20z"/></g>
+  <g id="i-chat"><path d="M20.5 12.5a7.5 7.5 0 0 1-10.9 6.6L4 20.5l1.4-5.4A7.5 7.5 0 1 1 20.5 12.5z"/><path d="M9 12h6M9 9.5h4"/></g>
+  <g id="i-wallet"><path d="M3.5 7.5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-14a2 2 0 0 1-2-2v-10z"/><path d="M3.5 9V6.6A1.6 1.6 0 0 1 5.1 5h11"/><circle cx="16" cy="13.5" r="1.3"/></g>
+  <g id="i-cog"><circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/></g>
+  <g id="i-lock"><rect x="5" y="10.5" width="14" height="9.5" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></g>
+  <g id="i-search"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></g>
+  <g id="i-plus"><path d="M12 5.5v13M5.5 12h13"/></g>
+  <g id="i-x"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></g>
+  <g id="i-check"><path d="M5 12.5l4.5 4.5L19 7.5"/></g>
+  <g id="i-user"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></g>
+  <g id="i-users"><circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><path d="M16 5.2a3.2 3.2 0 0 1 0 5.6M17 19a6 6 0 0 0-2-4.5"/></g>
+  <g id="i-chev-l"><path d="M15 6l-6 6 6 6"/></g>
+  <g id="i-chev-r"><path d="M9 6l6 6-6 6"/></g>
+  <g id="i-chev-d"><path d="M6 9.5l6 6 6-6"/></g>
+  <g id="i-panel"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M9.5 4.5v15M15.5 9l-2 3 2 3"/></g>
+  <g id="i-menu"><path d="M4 7h16M4 12h16M4 17h16"/></g>
+  <g id="i-send"><path d="M20.5 3.5L11 13M20.5 3.5l-6 17-3.5-7.5-7.5-3.5z"/></g>
+  <g id="i-camera"><path d="M4 8.5h3l1.5-2h7L17 8.5h3v11H4z"/><circle cx="12" cy="13.5" r="3.2"/></g>
+  <g id="i-edit"><path d="M4 20h4l11-11-4-4L4 16z"/><path d="M14.5 5.5l4 4"/></g>
+  <g id="i-trash"><path d="M4.5 7h15M9.5 7V5h5v2M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></g>
+  <g id="i-pause"><rect x="7" y="5" width="3.5" height="14" rx="1.4"/><rect x="13.5" y="5" width="3.5" height="14" rx="1.4"/></g>
+  <g id="i-play"><path d="M7.5 5l11 7-11 7z"/></g>
+  <g id="i-eye"><path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.8"/></g>
+  <g id="i-star"><path d="M12 4l2.5 5.2 5.5.8-4 3.9 1 5.6-5-2.7-5 2.7 1-5.6-4-3.9 5.5-.8z"/></g>
+  <g id="i-mail"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3.8 7l8.2 5.5L20.2 7"/></g>
+  <g id="i-phone"><path d="M7 3.5h3l1.5 4-2 1.5a11 11 0 0 0 5.5 5.5l1.5-2 4 1.5v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 5 5.7 2 2 0 0 1 7 3.5z"/></g>
+  <g id="i-key"><circle cx="8" cy="12" r="3.6"/><path d="M11.5 12H21M18 12v3.2M15 12v2.4"/></g>
+  <g id="i-shield"><path d="M12 3l7.5 3.2v5.3c0 4.5-3.1 8.2-7.5 10-4.4-1.8-7.5-5.5-7.5-10V6.2z"/><path d="M9 12.2l2 2 4-4"/></g>
+  <g id="i-logout"><path d="M10 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4"/><path d="M15 8l4 4-4 4M19 12H9"/></g>
+  <g id="i-arrow-d"><path d="M12 4.5v15M6 13.5l6 6 6-6"/></g>
+  <g id="i-arrow-u"><path d="M12 19.5v-15M6 10.5l6-6 6 6"/></g>
+  <g id="i-coins"><ellipse cx="9" cy="7" rx="5.5" ry="2.6"/><path d="M3.5 7v4.5c0 1.4 2.5 2.6 5.5 2.6s5.5-1.2 5.5-2.6V7"/><path d="M14.5 11.4c2.9.3 5 1.4 5 2.6v3.5c0 1.4-2.5 2.6-5.5 2.6-2.4 0-4.5-.7-5.2-1.7"/></g>
+  <g id="i-spark"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M18.5 16.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></g>
+  <g id="i-bolt"><path d="M13 3L5.5 13.5H11L10 21l7.5-10.5H12z"/></g>
+  <g id="i-globe"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 3.6 5.3 3.6 8.5S14.4 18.1 12 20.5c-2.4-2.4-3.6-5.3-3.6-8.5S9.6 5.9 12 3.5z"/></g>
+  <g id="i-headset"><path d="M4.5 15v-3a7.5 7.5 0 0 1 15 0v3"/><rect x="2.5" y="13.5" width="4" height="6" rx="2"/><rect x="17.5" y="13.5" width="4" height="6" rx="2"/><path d="M19.5 19.5v.5a2 2 0 0 1-2 2H14"/></g>
+  <g id="i-filter"><path d="M3.5 6.5h17M6.5 12h11M10 17.5h4"/></g>
+  <g id="i-image"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="9.5" r="1.8"/><path d="M4.5 17l5-5 4.5 4.5 3-2.5 3 3"/></g>
+
+  <!-- oyun işaretleri -->
+  <g id="i-g-efootball"><circle cx="12" cy="12" r="9"/><path d="M12 7.4l3.7 2.6-1.4 4.3H9.7L8.3 10z"/></g>
+  <g id="i-g-pubg"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="2.4"/><path d="M12 1.8v3.6M12 18.6v3.6M1.8 12h3.6M18.6 12h3.6"/></g>
+  <g id="i-g-brawl"><path d="M12 3.4l2.5 5.4 5.8.8-4.2 4 1 5.8L12 16.7 6.9 19.4l1-5.8-4.2-4 5.8-.8z"/></g>
+  <g id="i-g-clashroyale"><path d="M4 19.5h16M3.5 19.5l-1-10 5.2 3.4L12 6.2l4.3 6.7 5.2-3.4-1 10z"/></g>
+  <g id="i-g-clashofclans"><path d="M4 10.6L12 4l8 6.6v7.6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M9.8 20.2v-5.4h4.4v5.4"/></g>
+  <g id="i-g-lol"><path d="M19.4 3.2l-9.9 9.9M19.4 3.2l-.8 4.6-4.3 4.3-9.9 9.9 9.9-9.9 4.3-4.3z"/><path d="M4.4 15.6l4 4"/></g>
+  <g id="i-g-valorant"><path d="M3.5 5.5l8.5 14 8.5-14"/><path d="M3.5 5.5h5.2l3.8 6.3 3.8-6.3h5.2"/></g>
+  <g id="i-g-cs"><path d="M12 3.2c3 3.6 5 6.1 5 9.1a5 5 0 0 1-10 0c0-3 2-5.5 5-9.1z"/><path d="M12 18.2a2.6 2.6 0 0 1-2.6-2.6c0-1.6 2.6-4.1 2.6-4.1s2.6 2.5 2.6 4.1a2.6 2.6 0 0 1-2.6 2.6z"/></g>
+  <g id="i-g-mlbb"><path d="M12 3l7.2 3v5.6c0 4.4-3 8-7.2 9.8-4.2-1.8-7.2-5.4-7.2-9.8V6z"/><path d="M12 8v7M8.5 11.5h7"/></g>
+  <g id="i-g-fortnite"><path d="M3 12.4a9 9 0 0 1 18 0z"/><path d="M12 12.4v5.4a2.6 2.6 0 0 0 5.2 0"/><path d="M12 3.2V2"/></g>
+</defs></svg>
+
+<!-- ====== ARKA PLAN (statik) ====== -->
+<div class="bg" aria-hidden="true">
+  <span class="bg-a"></span><span class="bg-b"></span><span class="bg-c"></span>
+  <span class="bg-grid"></span><span class="bg-fade"></span>
+</div>
+<div class="topbar-progress" aria-hidden="true"><i id="progressBar"></i></div>
+
+<div class="shell">
+
+  <!-- ====== SOL PANEL ====== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-head">
+      <a class="brand" href="#" data-page="kesfet" aria-label="tardu ana sayfa">
+        <span class="brand-mark"><svg viewBox="0 0 24 24"><use href="#i-bolt"/></svg></span>
+        <span class="brand-txt"><b>tardu</b><small>hesap pazarı</small></span>
+      </a>
+      <button class="sb-toggle" id="sbToggle" title="Paneli daralt / genişlet (F)"><svg viewBox="0 0 24 24"><use href="#i-panel"/></svg></button>
+    </div>
+
+    <nav class="nav" id="nav">
+      <span class="nav-pill" id="navPill"></span>
+      <button class="nav-i is-on" data-page="kesfet" title="Keşfet"><svg viewBox="0 0 24 24"><use href="#i-compass"/></svg><span>Keşfet</span><em class="kbd">1</em></button>
+      <button class="nav-i" data-page="ilanlarim" data-locked="1" title="İlanlarım"><svg viewBox="0 0 24 24"><use href="#i-box"/></svg><span>İlanlarım</span><em class="kbd">2</em><b class="dot" id="cntIlan">0</b></button>
+      <button class="nav-i" data-page="favorilerim" data-locked="1" title="Favorilerim"><svg viewBox="0 0 24 24"><use href="#i-heart"/></svg><span>Favorilerim</span><em class="kbd">3</em><b class="dot" id="cntFav">0</b></button>
+      <button class="nav-i" data-page="mesajlarim" data-locked="1" title="Mesajlarım"><svg viewBox="0 0 24 24"><use href="#i-chat"/></svg><span>Mesajlarım</span><em class="kbd">4</em><b class="dot" id="cntMsg">0</b></button>
+      <button class="nav-i" data-page="cuzdanim" data-locked="1" title="Cüzdanım"><svg viewBox="0 0 24 24"><use href="#i-wallet"/></svg><span>Cüzdanım</span><em class="kbd">5</em></button>
+      <button class="nav-i" data-page="ayarlar" data-locked="1" title="Ayarlar"><svg viewBox="0 0 24 24"><use href="#i-cog"/></svg><span>Ayarlar</span><em class="kbd">6</em></button>
+    </nav>
+
+    <div class="sb-foot">
+      <div class="rate-card">
+        <div class="rate-top"><span>Komisyon</span><b>%4</b></div>
+        <div class="rate-bar"><i style="width:96%"></i></div>
+        <p>Sabit oran, gizli kesinti yok.</p>
+      </div>
+      <button class="sb-user" id="sbUser" data-page="ayarlar" data-locked="1" title="Profilim">
+        <span class="sb-user-av" id="sbUserAv">?</span>
+        <span class="sb-user-txt"><b id="sbUserName">Giriş yap</b><small id="sbUserSub">Ücretsiz hesap aç</small></span>
+      </button>
+      <div class="conn-row"><span class="conn" id="connDot"></span><span id="connText">Bağlanıyor…</span></div>
+    </div>
+  </aside>
+  <div class="sb-scrim" id="sbScrim"></div>
+
+  <!-- ====== SAĞ TARAF ====== -->
+  <div class="col">
+    <header class="topbar">
+      <button class="icon-btn burger" id="burger" aria-label="Menü"><svg viewBox="0 0 24 24"><use href="#i-menu"/></svg></button>
+
+      <div class="omni" id="omni" role="search">
+        <svg viewBox="0 0 24 24" class="oi"><use href="#i-search"/></svg>
+        <input id="arama" type="text" placeholder="Oyun, hesap veya ilan ara…" autocomplete="off" spellcheck="false" aria-label="Ara" />
+        <kbd>/</kbd>
+      </div>
+
+      <div class="top-right">
+        <button class="balance" id="balanceBtn" data-locked="1" title="Cüzdanım">
+          <span class="bal-label">Bakiye</span>
+          <span class="bal-val" id="bakiyeText">0,00 TL</span>
+          <span class="bal-plus"><svg viewBox="0 0 24 24"><use href="#i-plus"/></svg></span>
+        </button>
+        <button class="avatar" id="avatarBtn" aria-label="Profilim">
+          <span class="av-face" id="avatarFace">?</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="stage" id="stage">
+
+      <!-- ---------- KEŞFET ---------- -->
+      <section class="page is-on" id="p-kesfet">
+        <div class="hero">
+          <div class="hero-copy">
+            <span class="eyebrow"><i></i>türkiye'nin hesap pazarı</span>
+            <h1>Oyun hesabı alıp satmanın<br><span class="grad">en sade yolu.</span></h1>
+            <p>Onaylı satıcılar, anında teslim ve her satışta yalnızca <b>%4</b> komisyon.</p>
+            <div class="hero-cta">
+              <button class="btn primary lg" id="heroCta"><svg viewBox="0 0 24 24"><use href="#i-plus"/></svg>İlan ver</button>
+              <button class="btn ghost lg" id="heroRail">Kategorilere göz at</button>
+            </div>
+          </div>
+          <div class="hero-metrics">
+            <div class="metric"><b>24.819+</b><span>yayındaki ilan</span></div>
+            <div class="metric"><b>4,9 / 5</b><span>ortalama puan</span></div>
+            <div class="metric"><b>~4 dk</b><span>ort. teslim süresi</span></div>
+          </div>
+        </div>
+
+        <div class="sec-head" id="railWrap">
+          <h2>Kategoriler</h2>
+          <div class="rail-nav">
+            <button class="rbtn" data-rail="-1" aria-label="Geri"><svg viewBox="0 0 24 24"><use href="#i-chev-l"/></svg></button>
+            <button class="rbtn" data-rail="1" aria-label="İleri"><svg viewBox="0 0 24 24"><use href="#i-chev-r"/></svg></button>
+          </div>
+        </div>
+        <div class="rail" id="rail"></div>
+
+        <div class="sec-head results">
+          <h2 id="resTitle">Tüm ilanlar</h2>
+          <div class="sorts">
+            <button class="sort is-on" data-sort="pop">Popüler</button>
+            <button class="sort" data-sort="asc">Fiyat artan</button>
+            <button class="sort" data-sort="desc">Fiyat azalan</button>
+            <button class="sort" data-sort="yeni">En yeni</button>
+          </div>
+        </div>
+
+        <div class="cards" id="exploreGrid"></div>
+      </section>
+
+      <!-- ---------- İLANLARIM ---------- -->
+      <section class="page" id="p-ilanlarim">
+        <div class="page-head">
+          <div><span class="eyebrow"><i></i>satıcı paneli</span><h1>İlanlarım</h1><p class="sub">İlanlarını yönet, kazancını canlı izle.</p></div>
+          <button class="btn primary lg" id="newListingBtn"><svg viewBox="0 0 24 24"><use href="#i-plus"/></svg>Yeni ilan oluştur</button>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><span>Aktif ilan</span><b id="kAktif">0</b><i class="sp sp-g"></i></div>
+          <div class="kpi"><span>Pasif ilan</span><b id="kPasif">0</b><i class="sp sp-y"></i></div>
+          <div class="kpi kpi-hi"><span>Beklenen net kazanç</span><b id="kKazanc">0,00 TL</b><em>%4 komisyon düşüldü</em></div>
+          <div class="kpi"><span>Toplam görüntülenme</span><b id="kHit">0</b><em>son 30 gün</em></div>
+        </div>
+        <div class="tabs" id="tabs">
+          <span class="tab-ind"></span>
+          <button class="tab is-on" data-tab="aktif">Aktif ilanlar</button>
+          <button class="tab" data-tab="pasif">Pasif ilanlar</button>
+        </div>
+        <div class="cards" id="mineGrid"></div>
+      </section>
+
+      <!-- ---------- FAVORİLERİM ---------- -->
+      <section class="page" id="p-favorilerim">
+        <div class="page-head">
+          <div><span class="eyebrow"><i></i>kayıt defteri</span><h1>Favorilerim</h1><p class="sub">Beğendiğin hesaplar tek yerde.</p></div>
+        </div>
+        <div class="cards" id="favGrid"></div>
+      </section>
+
+      <!-- ---------- MESAJLARIM ---------- -->
+      <section class="page" id="p-mesajlarim">
+        <div class="page-head">
+          <div><span class="eyebrow"><i></i>sohbet</span><h1>Mesajlarım</h1><p class="sub">İlancılarla yazış. Satıcı sorularınızı hızlıca sorun.</p></div>
+        </div>
+        <div class="msgwrap">
+          <div class="threadlist" id="threadList"></div>
+          <div class="threadview" id="threadView">
+            <div class="thread-empty" id="threadEmpty">
+              <span class="te-ico"><svg viewBox="0 0 24 24"><use href="#i-chat"/></svg></span>
+              <b>Bir sohbet seç</b>
+              <p>Herhangi bir ilanın üzerinden mesaj at; yazışma burada toplansın.</p>
+            </div>
+            <div class="thread-inner" id="threadInner" hidden>
+              <header class="thread-head">
+                <button class="icon-btn back" id="threadBack" aria-label="Geri"><svg viewBox="0 0 24 24"><use href="#i-chev-l"/></svg></button>
+                <span class="th-av" id="thAv">S</span>
+                <span class="th-txt"><b id="thName">Satıcı</b><small id="thListing">İlan</small></span>
+                <button class="icon-btn" id="thListingBtn" title="İlanı aç"><svg viewBox="0 0 24 24"><use href="#i-box"/></svg></button>
+              </header>
+              <div class="thread-body" id="threadBody"></div>
+              <form class="thread-form" id="threadForm">
+                <input id="msgInput" placeholder="Mesajını yaz…" autocomplete="off" maxlength="500" />
+                <button class="btn primary sq" type="submit" aria-label="Gönder"><svg viewBox="0 0 24 24"><use href="#i-send"/></svg></button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- CÜZDANIM ---------- -->
+      <section class="page" id="p-cuzdanim">
+        <div class="page-head">
+          <div><span class="eyebrow"><i></i>finans</span><h1>Cüzdanım</h1></div>
+        </div>
+        <div class="wallet">
+          <div class="wallet-row">
+            <div>
+              <span class="wallet-label">Toplam bakiye</span>
+              <h2 class="wallet-big" id="walletBig">0,00 TL</h2>
+              <div class="wallet-meta"><span class="pill-up">+ 1.250 TL hoş geldin bonusu</span><span>7/24 korumalı</span></div>
+            </div>
+            <div class="wallet-actions">
+              <button class="btn primary" id="walletIn"><svg viewBox="0 0 24 24"><use href="#i-arrow-d"/></svg>Para yatır</button>
+              <button class="btn ghost" id="walletOut"><svg viewBox="0 0 24 24"><use href="#i-arrow-u"/></svg>Para çek</button>
+            </div>
+          </div>
+          <div class="wallet-chips">
+            <div><span>Satıcı puanı</span><b>4,9</b></div>
+            <div><span>Ödeme süresi</span><b>~4 dk</b></div>
+            <div><span>Komisyon</span><b>%4</b></div>
+          </div>
+        </div>
+        <div class="sec-head"><h2>İşlem geçmişi</h2><button class="link" id="txClear">Temizle</button></div>
+        <div class="tx" id="txList"></div>
+      </section>
+
+      <!-- ---------- AYARLAR / PROFİL ---------- -->
+      <section class="page" id="p-ayarlar">
+        <div class="page-head">
+          <div><span class="eyebrow"><i></i>profil ve tercihler</span><h1>Ayarlar</h1></div>
+        </div>
+
+        <div class="settings">
+          <div class="set-card">
+            <div class="set-head"><h3>Profil fotoğrafı</h3><p>Kartlarda ve mesajlarda görünür.</p></div>
+            <div class="set-body">
+              <div class="avatar-edit">
+                <span class="avatar-lg" id="avatarPrev">?</span>
+                <div class="avatar-btns">
+                  <label class="btn ghost sm" for="avatarFile"><svg viewBox="0 0 24 24"><use href="#i-camera"/></svg>Fotoğraf yükle</label>
+                  <input type="file" id="avatarFile" accept="image/*" hidden />
+                  <button class="link danger" id="avatarRemove">Kaldır</button>
+                </div>
+              </div>
+              <p class="hint">PNG veya JPG, en fazla 3 MB. Kare görsel önerilir.</p>
+            </div>
+          </div>
+
+          <div class="set-card">
+            <div class="set-head"><h3>Kimlik bilgileri</h3><p>İlanlarında bu bilgiler görünür.</p></div>
+            <div class="set-body">
+              <label class="field"><span>Kullanıcı adı <i>*</i></span><input id="sUser" autocomplete="username" maxlength="20" placeholder="tardu_kullanici" /></label>
+              <label class="field"><span>Ad soyad <i>*</i></span><input id="sName" autocomplete="name" maxlength="40" placeholder="Adın ve soyadın" /></label>
+              <label class="field"><span>E-posta</span><input id="sMail" type="email" readonly tabindex="-1" /></label>
+              <label class="field"><span>Telefon <i>*</i></span><input id="sTel" autocomplete="tel" placeholder="05__ ___ __ __" /></label>
+            </div>
+          </div>
+
+          <div class="set-card">
+            <div class="set-head"><h3>Güvenlik</h3><p>Şifreni ve oturumlarını yönet.</p></div>
+            <div class="set-body">
+              <label class="field"><span>Mevcut şifre</span><input id="pwOld" type="password" autocomplete="current-password" placeholder="••••••" /></label>
+              <label class="field"><span>Yeni şifre</span><input id="pwNew" type="password" autocomplete="new-password" placeholder="en az 6 karakter" /></label>
+              <label class="field"><span>Yeni şifre (tekrar)</span><input id="pwNew2" type="password" autocomplete="new-password" placeholder="••••••" /></label>
+              <div class="pw-meter"><i id="pwBar"></i></div>
+              <button class="btn ghost" id="pwSave"><svg viewBox="0 0 24 24"><use href="#i-key"/></svg>Şifreyi güncelle</button>
+              <div class="sec-div"><span>E-posta değiştir</span></div>
+              <label class="field"><span>Yeni e-posta</span><input id="mailNew" type="email" autocomplete="email" placeholder="yeni@mail.com" /></label>
+              <label class="field"><span>Mevcut şifre (onay)</span><input id="mailPw" type="password" autocomplete="current-password" placeholder="••••••" /></label>
+              <button class="btn ghost" id="mailSave"><svg viewBox="0 0 24 24"><use href="#i-mail"/></svg>E-postayı güncelle</button>
+            </div>
+          </div>
+
+          <div class="set-card">
+            <div class="set-head"><h3>Bildirimler</h3><p>Sadece seninkiler, spam yok.</p></div>
+            <div class="set-body">
+              <label class="switch"><input type="checkbox" id="nMsg" checked /><span></span><b>Yeni mesaj</b><i>Biri sana yazdığında</i></label>
+              <label class="switch"><input type="checkbox" id="nOffer" checked /><span></span><b>Teklif / ilan hareketi</b><i>İlanına ilgi olduğunda</i></label>
+              <label class="switch"><input type="checkbox" id="nSale" checked /><span></span><b>Satış tamamlandığında</b><i>Hesabın satıldığında</i></label>
+            </div>
+          </div>
+
+          <div class="set-card">
+            <div class="set-head"><h3>Hesap</h3><p>Oturum ve veri işlemleri.</p></div>
+            <div class="set-body">
+              <div class="acct-row"><span>Kayıt tarihi</span><b id="accDate">—</b></div>
+              <div class="acct-row"><span>Kullanıcı adı</span><b id="accUser">—</b></div>
+              <div class="acct-row"><span>Üye ID</span><b id="accId">—</b></div>
+              <div class="btn-row">
+                <button class="btn ghost sm" id="resetData">Tüm verileri sıfırla</button>
+                <button class="btn danger sm" id="logoutBtn"><svg viewBox="0 0 24 24"><use href="#i-logout"/></svg>Çıkış yap</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="save-bar" id="saveBar"><span>Kaydedilmemiş değişiklikler</span><button class="btn primary sm" id="saveProfile">Kaydet</button></div>
+      </section>
+
+    </main>
+
+    <nav class="tabbar">
+      <button class="t-i is-on" data-page="kesfet"><svg viewBox="0 0 24 24"><use href="#i-compass"/></svg><span>Keşfet</span></button>
+      <button class="t-i" data-page="ilanlarim" data-locked="1"><svg viewBox="0 0 24 24"><use href="#i-box"/></svg><span>İlanlarım</span></button>
+      <button class="t-fab" id="tabFab" title="İlan ver"><svg viewBox="0 0 24 24"><use href="#i-plus"/></svg></button>
+      <button class="t-i" data-page="mesajlarim" data-locked="1"><svg viewBox="0 0 24 24"><use href="#i-chat"/></svg><span>Mesajlar</span></button>
+      <button class="t-i" data-page="cuzdanim" data-locked="1"><svg viewBox="0 0 24 24"><use href="#i-wallet"/></svg><span>Cüzdan</span></button>
+    </nav>
+  </div>
+</div>
+
+<!-- ====== DESTEK ====== -->
+<button class="support" id="supportBtn" title="Destek">
+  <svg viewBox="0 0 24 24"><use href="#i-headset"/></svg><b>Destek</b>
+</button>
+
+<!-- ====== KAYIT / GİRİŞ EKRANI ====== -->
+<div class="authwall" id="authwall" hidden>
+  <div class="aw-card">
+    <div class="aw-brand"><span class="brand-mark"><svg viewBox="0 0 24 24"><use href="#i-bolt"/></svg></span><b>tardu</b></div>
+    <h2 class="aw-title" id="awTitle">Kayıt ol</h2>
+    <p class="aw-note" id="awNote">Bu bölümü kullanmak için hesabına giriş yap.</p>
+
+    <form class="aw-body" id="regForm">
+      <label class="field"><span>Kullanıcı adı <i>*</i></span><input id="rUser" autocomplete="username" maxlength="20" placeholder="tardu_kullanici" required /></label>
+      <label class="field"><span>Ad soyad <i>*</i></span><input id="rName" autocomplete="name" maxlength="40" placeholder="Adın ve soyadın" required /></label>
+      <label class="field"><span>E-posta <i>*</i></span><input id="rMail" type="email" autocomplete="email" placeholder="ornek@mail.com" required /></label>
+      <label class="field"><span>Telefon <i>*</i></span><input id="rTel" autocomplete="tel" placeholder="05__ ___ __ __" required /></label>
+      <label class="field"><span>Şifre <i>*</i></span><input id="rPass" type="password" autocomplete="new-password" placeholder="en az 6 karakter" required /></label>
+      <label class="field"><span>Şifre tekrar <i>*</i></span><input id="rPass2" type="password" autocomplete="new-password" placeholder="şifreyi tekrarla" required /></label>
+      <label class="check"><input type="checkbox" id="rAgree" required /><span class="box"><svg viewBox="0 0 24 24"><use href="#i-check"/></svg></span><b>Üyelik sözleşmesini ve gizlilik politikasını okudum, kabul ediyorum.</b></label>
+      <button class="btn primary full" type="submit"><svg viewBox="0 0 24 24"><use href="#i-user"/></svg>Hesap oluştur</button>
+    </form>
+
+    <form class="aw-body" id="logForm" hidden>
+      <label class="field"><span>Kullanıcı adı veya e-posta <i>*</i></span><input id="lId" autocomplete="username" placeholder="tardu_kullanici veya e-posta" required /></label>
+      <label class="field"><span>Şifre <i>*</i></span><input id="lPass" type="password" autocomplete="current-password" placeholder="••••••" required /></label>
+      <button class="btn primary full" type="submit"><svg viewBox="0 0 24 24"><use href="#i-logout"/></svg>Giriş yap</button>
+      <p class="aw-alt">Hesabın yok mu? <button type="button" class="link" data-atab="register">Kayıt ol</button></p>
+    </form>
+  </div>
+</div>
+
+<!-- ====== İLAN OLUŞTUR ====== -->
+<div class="modal" id="mListing" role="dialog" aria-modal="true">
+  <div class="m-head">
+    <div><span class="eyebrow"><i></i>yeni ilan</span><h2>İlan oluştur</h2></div>
+    <button class="icon-btn" data-close><svg viewBox="0 0 24 24"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="m-body">
+    <div class="m-grid">
+      <label class="field"><span>Kategori <i>*</i></span>
+        <div class="select"><select id="fCat"></select><svg viewBox="0 0 24 24"><use href="#i-chev-d"/></svg></div>
+      </label>
+      <label class="field"><span>Fiyat (TL) <i>*</i></span>
+        <div class="input-money"><span>₺</span><input id="fPrice" inputmode="numeric" placeholder="0" /></div>
+      </label>
+    </div>
+    <label class="field"><span>İlan adı <i>*</i> <em id="tCnt">0/60</em></span>
+      <input id="fTitle" maxlength="60" placeholder="örn: Full+Full Valorant — 120 Skin, Reaver Vandal" />
+    </label>
+    <label class="field"><span>Açıklama <i>*</i> <em id="dCnt">0/400</em></span>
+      <textarea id="fDesc" maxlength="400" rows="3" placeholder="Rank, skin sayısı, klan durumu, mail değişiyor mu…"></textarea>
+    </label>
+    <div class="tags"><span>Hızlı etiketler</span><div id="fTags"></div></div>
+
+    <div class="calc" id="calc">
+      <div class="calc-ring">
+        <svg viewBox="0 0 132 132">
+          <defs><linearGradient id="ringg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs>
+          <circle class="ring-bg" cx="66" cy="66" r="54"/>
+          <circle class="ring-fg" cx="66" cy="66" r="54" id="ringFg"/>
+        </svg>
+        <div class="ring-mid"><b id="ringPct">%96</b><span>net senin</span></div>
+      </div>
+      <div class="calc-lines">
+        <div class="cl"><span>İlan fiyatı</span><b id="cPrice">0,00 TL</b></div>
+        <div class="cl minus"><span>tardu komisyonu <em>(her zaman %4)</em></span><b id="cFee">0,00 TL</b></div>
+        <div class="cl total"><span>Kazancın</span><b id="cNet">0,00 TL</b></div>
+        <div class="calc-note" id="calcNote">Fiyatı gir, kazancın anında hesaplansın.</div>
+      </div>
+    </div>
+
+    <label class="rules">
+      <input type="checkbox" id="fAgree" />
+      <span class="box"><svg viewBox="0 0 24 24"><use href="#i-check"/></svg></span>
+      <span class="rules-txt"><b>İlan verme kurallarını okudum ve kabul ediyorum.</b>
+        <small>Hesap sana ait olmalı, bilgiler doğru olmalı, ödeme sonrası bilgiler alıcıya iletilir.</small>
+      </span>
+    </label>
+  </div>
+  <div class="m-foot">
+    <button class="btn ghost" data-close>Vazgeç</button>
+    <button class="btn primary" id="publishBtn" disabled><span>Yayınla</span></button>
+  </div>
+</div>
+
+<!-- ====== İLAN DETAY ====== -->
+<div class="modal md" id="mDetail" role="dialog" aria-modal="true">
+  <div class="md-scroll" id="dBody"></div>
+</div>
+
+<!-- ====== DESTEK ====== -->
+<div class="modal md chat-mod" id="mChat" role="dialog" aria-modal="true">
+  <div class="chat-head">
+    <span class="chat-av"><svg viewBox="0 0 24 24"><use href="#i-headset"/></svg></span>
+    <div><b>Tardu Destek</b><small>Ortalama yanıt ~2 dakika</small></div>
+    <button class="icon-btn" data-close><svg viewBox="0 0 24 24"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="chat-body" id="chatBody">
+    <div class="msg bot">Selam knk. İlan, fiyat, ödeme veya <b>%4 komisyon</b> hakkında sorabilirsin.</div>
+  </div>
+  <div class="chat-quick">
+    <button data-q="Komisyon ne kadar?">Komisyon ne kadar?</button>
+    <button data-q="İlanım ne zaman satılır?">İlan ne zaman satılır?</button>
+    <button data-q="Ödememi nasıl alırım?">Ödememi nasıl alırım?</button>
+  </div>
+  <form class="chat-input" id="chatForm">
+    <input id="chatText" placeholder="Mesajını yaz…" autocomplete="off" />
+    <button class="btn primary sq" type="submit" aria-label="Gönder"><svg viewBox="0 0 24 24"><use href="#i-send"/></svg></button>
+  </form>
+</div>
+
+<!-- ====== KOMUT PALETİ ====== -->
+<div class="modal cm" id="mCmd" role="dialog" aria-modal="true">
+  <div class="cm-input">
+    <svg viewBox="0 0 24 24"><use href="#i-search"/></svg>
+    <input id="cmdText" placeholder="Sayfaya git, ilan oluştur, ara…" />
+    <kbd>esc</kbd>
+  </div>
+  <div class="cm-list" id="cmdList"></div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="toasts" id="toasts"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
