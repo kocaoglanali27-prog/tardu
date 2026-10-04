@@ -417,7 +417,22 @@
         <div class="input-money"><span>₺</span><input id="fPrice" inputmode="numeric" placeholder="0" /></div>
       </label>
     </div>
-    <label class="field"><span>İlan adı <i>*</i> <em id="tCnt">0/60</em></span>
+    <label class="field"><span>İlan görseli <i>*</i></span>
+        <div class="img-pick" id="imgPick" title="Kendi görselini yüklemek için tıkla">
+          <img id="imgPrev" alt="" />
+          <span class="img-ph" id="imgPh">
+            <svg viewBox="0 0 24 24"><use href="#i-image"/></svg>
+            <b>Varsayılan görsel seçildi</b>
+            <small>Kendi görselini yüklemek için tıkla</small>
+          </span>
+        </div>
+        <input type="file" id="imgFile" accept="image/*" hidden />
+        <div class="img-row">
+          <button class="btn ghost sm" id="imgUpload" type="button">Kendi görselimi yükle</button>
+          <button class="link danger" id="imgReset" type="button">Varsayılana dön</button>
+        </div>
+      </label>
+      <label class="field"><span>İlan adı <i>*</i> <em id="tCnt">0/60</em></span>
       <input id="fTitle" maxlength="60" placeholder="örn: Full+Full Valorant — 120 Skin, Reaver Vandal" />
     </label>
     <label class="field"><span>Açıklama <i>*</i> <em id="dCnt">0/400</em></span>

@@ -183,7 +183,7 @@ function cardHTML(x){
       '<button class="card-alt" data-act="msg" data-id="' + x.id + '" title="Satıcıya mesaj at">' + icon('chat') + '</button>' +
       '<button class="card-alt" data-act="fav" data-id="' + x.id + '" title="Favorilere ekle">' + icon('heart') + '</button>';
   return '<article class="card" data-id="' + x.id + '" style="--c1c:' + c.c1 + ';--c2c:' + c.c2 + '">' +
-    '<div class="card-art">' +
+    '<div class="card-art ' + (x.image ? 'has-img' : '') + '"' + (x.image ? ' style="--img:url(' + x.image + ')"' : '') + '>' +
       (off ? '<div class="card-off">Pasif ilan</div>' : '') +
       '<button class="card-fav ' + (isFav ? 'on' : '') + '" data-act="fav" data-id="' + x.id + '" title="Favori">' + icon('heart') + '</button>' +
       '<span class="card-kat">' + c.name + '</span>' +
@@ -489,11 +489,68 @@ async function mineDel(id){
   catch(e){ toast('Silme başarısız.', 'err', 'x'); }
 }
 
+/* ---------- ilan görseli ---------- */
+let listingImage = '';
+let customImage = false;
+function glyphMarkup(catId){
+  const g = $('#i-' + catOf(catId).g);
+  return g ? g.innerHTML : '';
+}
+function defaultImage(catId){
+  const c = catOf(catId);
+  const svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450">' +
+    '<defs>' +
+      '<linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + c.c1 + '"/><stop offset="1" stop-color="' + c.c2 + '"/></linearGradient>' +
+      '<pattern id="p1" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0v40" fill="none" stroke="#ffffff" stroke-opacity=".08" stroke-width="1"/></pattern>' +
+    '</defs>' +
+    '<rect width="800" height="450" fill="url(#g1)"/>' +
+    '<rect width="800" height="450" fill="url(#p1)"/>' +
+    '<circle cx="650" cy="100" r="160" fill="#ffffff" fill-opacity=".07"/>' +
+    '<circle cx="90" cy="400" r="110" fill="#ffffff" fill-opacity=".05"/>' +
+    '<g fill="none" stroke="#ffffff" stroke-opacity=".92" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" transform="translate(64,150) scale(4.2)">' + glyphMarkup(catId) + '</g>' +
+    '<text x="64" y="392" font-family="Segoe UI,Arial,Helvetica,sans-serif" font-size="36" font-weight="700" fill="#ffffff">' + c.name + '</text>' +
+    '<text x="64" y="422" font-family="Segoe UI,Arial,Helvetica,sans-serif" font-size="17" fill="#ffffff" fill-opacity=".78">tardu \u00b7 hesap pazar\u0131</text>' +
+    '</svg>';
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+function shrinkImage(file, maxW, quality){
+  return new Promise((res, rej) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      try{
+        const sc = Math.min(1, maxW / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(img.width * sc));
+        c.height = Math.max(1, Math.round(img.height * sc));
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        res(c.toDataURL('image/jpeg', quality));
+      }catch(e){ rej(e); }
+    };
+    img.onerror = rej;
+    img.src = url;
+  });
+}
+function paintImgPick(){
+  const box = $id('imgPick'), prev = $id('imgPrev'), ph = $id('imgPh');
+  if (!box) return;
+  if (listingImage){ prev.src = listingImage; prev.hidden = false; ph.hidden = true; box.classList.add('has'); }
+  else { prev.hidden = true; ph.hidden = false; box.classList.remove('has'); }
+}
+function applyDefaultImage(){
+  listingImage = defaultImage($id('fCat').value);
+  paintImgPick();
+  calcListing();
+}
+
 /* ---------- ilan oluşturma ---------- */
 function openListing(){
   if (!needFB()) return;
   if (!fbUser){ pendingPage = 'ilanlarim'; openAuthWall('İlan vermek için önce hesabına giriş yap.'); return; }
   openModal('mListing');
+  applyDefaultImage();
   calcListing();
   setTimeout(() => $id('fPrice').focus(), 200);
 }
@@ -511,7 +568,7 @@ function calcListing(){
   if (!price) note.textContent = 'Fiyatı gir, kazancın anında hesaplansın.';
   else note.innerHTML = 'Alıcı <b>' + money(price) + '</b> ödüyor, senin cebine <b>' + money(net) + '</b> giriyor. Tardu komisyonu <b>' + money(fee) + '</b>.';
   $id('calc').classList.toggle('live', price > 0);
-  const ok = price >= 50 && $id('fTitle').value.trim().length >= 8 &&
+  const ok = !!listingImage && price >= 50 && $id('fTitle').value.trim().length >= 8 &&
              $id('fDesc').value.trim().length >= 15 && $id('fAgree').checked;
   $id('publishBtn').disabled = !ok;
   $id('publishBtn').querySelector('span').textContent = ok ? 'Yayınla · ' + money(net) + ' kazanç' : 'Yayınla';
@@ -523,7 +580,7 @@ async function publishListing(){
   const t = $('#fTags .tchip.on');
   const data = { cat:$id('fCat').value, title:$id('fTitle').value.trim(), desc:$id('fDesc').value.trim(),
     price, seller:profile.user, sellerUid:uid(), rating:5, views:0, tag:t ? t.dataset.t : '',
-    state:'active', created:SV.TIMESTAMP };
+    image:listingImage || defaultImage($id('fCat').value), state:'active', created:SV.TIMESTAMP };
   try{
     const k = RDB.ref('listings').push().key;
     const ups = {};
@@ -535,7 +592,8 @@ async function publishListing(){
   closeModal();
   $id('fTitle').value = ''; $id('fDesc').value = ''; $id('fPrice').value = ''; $id('fAgree').checked = false;
   $$('#fTags .tchip').forEach(e => e.classList.remove('on'));
-  calcListing();
+  customImage = false;
+  applyDefaultImage();
   tab = 'aktif';
   go('ilanlarim');
   toast('İlanın yayında. Beklenen net kazancın ' + money(price * (1 - FEE)) + '.', 'ok', 'check');
@@ -547,7 +605,7 @@ function detail(id){
   if (!x) return;
   const c = catOf(x.cat);
   $id('dBody').innerHTML =
-    '<div class="d-art" style="background:linear-gradient(140deg,' + c.c1 + ',' + c.c2 + ')">' +
+    '<div class="d-art ' + (x.image ? 'has-img' : '') + '"' + (x.image ? ' style="--img:url(' + x.image + ')"' : '') + '>' +
       '<span class="d-mark">' + catMark(x.cat) + '</span><span class="dk">' + c.name + '</span></div>' +
     '<div class="d-body">' +
       '<h2>' + esc(x.title) + '</h2>' +
@@ -623,7 +681,10 @@ async function messageSeller(listingId){
     openThreadId = k;
     go('mesajlarim');
     setTimeout(() => $id('msgInput').focus(), 60);
-  }catch(e){ toast('Sohbet açılamadı.', 'err', 'x'); }
+  }catch(e){
+    const code = (e && (e.code || e.message)) || 'bilinmeyen hata';
+    toast('Sohbet açılamadı (' + code + '). Rules güncellenmeli.', 'err', 'x');
+  }
 }
 async function sendMessage(text){
   const t = threadCache[openThreadId];
@@ -650,7 +711,7 @@ async function sendMessage(text){
         }catch(e){}
       }, 1400);
     }
-  }catch(e){ toast('Mesaj gönderilemedi.', 'err', 'x'); }
+  }catch(e){ toast('Mesaj gönderilemedi (' + ((e && (e.code || e.message)) || 'hata') + ')', 'err', 'x'); }
 }
 function clearUnread(t){
   if (!fbUser) return;
@@ -1000,7 +1061,13 @@ async function selfTest(){
     await p.remove();
     put('4) Yazma yetkisi: tamam');
   }catch(e){ put('4) Yazma yetkisi: HATA (' + ((e && e.code) || e.message || e) + ')'); }
-  put(profile ? '5) Profil: yüklendi (@' + profile.user + ')' : '5) Profil: YÜKLENEMEDİ — Rules kısmını kontrol et');
+  put(profile ? '5) Profil: yüklendi (@' + profile.user + ')' : '5) Profil: Y\u00d9KLENEMED\u0130 \u2014 Rules k\u0131sm\u0131n\u0131 kontrol et');
+  try{
+    const t = RDB.ref('threads/_probe');
+    await t.set({ buyerUid:uid(), sellerUid:null, created:Date.now() });
+    await t.remove();
+    put('6) Sohbet yazma: tamam');
+  }catch(e){ put('6) Sohbet yazma: HATA (' + ((e && e.code) || e.message || e) + ') \u2190 Rules i\u011findeki threads k\u0131sm\u0131n\u0131 g\u00f6ncelle'); }
 }
 
 /* ---------- destek ---------- */
@@ -1192,6 +1259,24 @@ function init(){
   $id('fDesc').addEventListener('input', () => $id('dCnt').textContent = $id('fDesc').value.length + '/400');
   $id('fTags').addEventListener('click', e => { const b = e.target.closest('.tchip'); if (b) b.classList.toggle('on'); });
   $id('publishBtn').onclick = publishListing;
+  $id('imgPick').onclick = () => $id('imgFile').click();
+  $id('imgUpload').onclick = () => $id('imgFile').click();
+  $id('imgReset').onclick = () => { customImage = false; applyDefaultImage(); toast('Varsayılan görsel seçildi.', 'info', 'image'); };
+  $id('fCat').addEventListener('change', () => { if (!customImage) applyDefaultImage(); });
+  $id('imgFile').addEventListener('change', async e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    if (f.size > 6e6) return toast('Dosya 6MB üzerinde.', 'err', 'image');
+    try{
+      const out = await shrinkImage(f, 900, 0.72);
+      if (out.length > 500000) return toast('Görsel çok büyük, başka bir foto dene.', 'err', 'image');
+      listingImage = out; customImage = true;
+      paintImgPick();
+      calcListing();
+      toast('Görsel eklendi.', 'ok', 'check');
+    }catch(err){ toast('Görsel okunamadı.', 'err', 'x'); }
+    e.target.value = '';
+  });
   $$('[data-close]').forEach(b => b.onclick = closeModal);
   $id('scrim').onclick = closeModal;
 
