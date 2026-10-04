@@ -210,9 +210,14 @@
       <!-- ---------- MESAJLARIM ---------- -->
       <section class="page" id="p-mesajlarim">
         <div class="page-head">
-          <div><span class="eyebrow"><i></i>sohbet</span><h1>Mesajlarım</h1><p class="sub">İlancılarla yazış. Satıcı sorularınızı hızlıca sorun.</p></div>
+          <div><span class="eyebrow"><i></i>sohbet</span><h1>Mesajlarım</h1><p class="sub">Satıcılarla birebir yazış ya da genel sohbete katıl.</p></div>
         </div>
-        <div class="msgwrap">
+        <div class="tabs" id="msgTabs">
+          <span class="tab-ind"></span>
+          <button class="tab is-on" data-mtab="dm">DM</button>
+          <button class="tab" data-mtab="gen">Genel Sohbet</button>
+        </div>
+        <div class="msgwrap" id="dmWrap">
           <div class="threadlist" id="threadList"></div>
           <div class="threadview" id="threadView">
             <div class="thread-empty" id="threadEmpty">
@@ -230,6 +235,21 @@
               <div class="thread-body" id="threadBody"></div>
               <form class="thread-form" id="threadForm">
                 <input id="msgInput" placeholder="Mesajını yaz…" autocomplete="off" maxlength="500" />
+                <button class="btn primary sq" type="submit" aria-label="Gönder"><svg viewBox="0 0 24 24"><use href="#i-send"/></svg></button>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="genwrap" id="genWrap" hidden>
+          <div class="threadview">
+            <div class="thread-inner">
+              <header class="thread-head">
+                <span class="th-av">T</span>
+                <span class="th-txt"><b>Genel Sohbet</b><small id="genCount">tardu üyeleri burada</small></span>
+              </header>
+              <div class="thread-body" id="genBody"></div>
+              <form class="thread-form" id="genForm">
+                <input id="genInput" placeholder="Herkese yaz…" autocomplete="off" maxlength="300" />
                 <button class="btn primary sq" type="submit" aria-label="Gönder"><svg viewBox="0 0 24 24"><use href="#i-send"/></svg></button>
               </form>
             </div>
@@ -437,6 +457,16 @@
 <!-- ====== İLAN DETAY ====== -->
 <div class="modal md" id="mDetail" role="dialog" aria-modal="true">
   <div class="md-scroll" id="dBody"></div>
+</div>
+
+<!-- ====== PARA YATIR / ÇEK ====== -->
+<div class="modal md" id="mMoney" role="dialog" aria-modal="true">
+  <div class="m-head">
+    <div><span class="eyebrow"><i></i>cüzdan</span><h2 id="moneyTitle">Para yatır</h2></div>
+    <button class="icon-btn" data-close><svg viewBox="0 0 24 24"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="m-body" id="moneyBody"></div>
+  <div class="m-foot" id="moneyFoot"></div>
 </div>
 
 <!-- ====== DESTEK ====== -->

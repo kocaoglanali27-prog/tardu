@@ -407,6 +407,22 @@ body.sb-collapsed .sb-user{justify-content:center;padding:8px 0}
 .thread-form input{flex:1;height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.3);outline:0;font-size:14px;transition:border-color .12s var(--e)}
 .thread-form input:focus{border-color:rgba(124,92,255,.55)}
 
+/* ---------- genel sohbet ---------- */
+.genwrap{border:1px solid var(--line);border-radius:var(--r-l);overflow:hidden;background:var(--s1);min-height:560px;display:flex;flex-direction:column}
+.genwrap .threadview{display:flex}
+.genwrap .thread-body{min-height:380px;max-height:480px}
+.gen-name{display:block;font-size:10.5px;font-weight:600;color:var(--v2);margin-bottom:3px}
+
+/* ---------- iban kutusu ---------- */
+.iban-box{display:flex;align-items:center;gap:10px;padding:14px;border-radius:var(--r-m);background:rgba(0,0,0,.3);border:1px solid var(--line2)}
+.iban-box code{flex:1;font-family:ui-monospace,Consolas,monospace;font-size:15px;letter-spacing:.04em;word-break:break-all}
+.copy-btn{flex:none;display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 13px;border-radius:10px;font-size:12.5px;font-weight:600;background:var(--s2);border:1px solid var(--line2);transition:background .12s var(--e)}
+.copy-btn:hover{background:var(--s3)}
+.copy-btn svg{width:15px;height:15px}
+.ref-code{display:inline-block;font-family:ui-monospace,Consolas,monospace;font-size:13px;font-weight:700;color:var(--cy);background:rgba(34,211,238,.08);border:1px dashed rgba(34,211,238,.4);border-radius:9px;padding:6px 12px;margin-top:6px}
+.money-note{font-size:12.5px;color:var(--txt2);line-height:1.65;background:var(--s1);border:1px solid var(--line);border-radius:var(--r-m);padding:13px}
+.money-note b{color:var(--txt)}
+
 /* ---------- cüzdan ---------- */
 .wallet{
   position:relative;overflow:hidden;border-radius:var(--r-x);padding:28px;
