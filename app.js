@@ -100,8 +100,13 @@ const saveUI = () => { try{ localStorage.setItem(K_UI, JSON.stringify(uiState));
 
 const uid = () => fbUser ? fbUser.uid : null;
 const isAuthed = () => !!fbUser && !!profile;
-const isMine = x => fbUser && x.sellerUid === fbUser.uid;
+const isMine = x => !!fbUser && x.sellerUid === fbUser.uid;
 const myName = () => profile ? profile.user : 'misafir';
+function peerOf(t){
+  if (!t) return '?';
+  if (fbUser && t.buyerUid === fbUser.uid) return t.seller || 'Satıcı';
+  return t.buyer || 'Alıcı';
+}
 
 /* ---------- bildirim ---------- */
 function toast(msg, kind, ico){
@@ -257,7 +262,7 @@ function render(p){
   $id('cntIlan').textContent = listings.filter(x => isMine(x) && x.state === 'active').length;
   $id('cntFav').textContent = Object.keys(favs).length;
   $id('cntMsg').textContent = unreadTotal();
-  $$('.tab').forEach(t => t.classList.toggle('is-on', t.dataset.tab === tab));
+  $$('#tabs .tab').forEach(t => t.classList.toggle('is-on', t.dataset.tab === tab));
   moveTabInd();
 }
 
@@ -445,6 +450,7 @@ async function buy(id){
   if (!x || !needFB()) return;
   if (isMine(x)) return toast('Bu senin ilanın knk.', 'err', 'x');
   if (!fbUser){ pendingPage = 'cuzdanim'; openAuthWall('Satın almak için hesabına giriş yap.'); return; }
+  if (!profile) return toast('Profilin yüklenemedi. Veritabanı kurallarını kontrol et.', 'err', 'x');
   const balRef = RDB.ref('users/' + uid() + '/balance');
   let res = null;
   try{ res = await balRef.transaction(b => { b = b || 0; if (b < x.price) return; return b - x.price; }); }
@@ -462,6 +468,7 @@ async function buy(id){
 async function fav(id){
   if (!needFB()) return;
   if (!fbUser){ pendingPage = 'favorilerim'; openAuthWall('Favoriye eklemek için giriş yap.'); return; }
+  if (!profile) return toast('Profilin yüklenemedi. Veritabanı kurallarını kontrol et.', 'err', 'x');
   const r = RDB.ref('users/' + uid() + '/favs/' + id);
   try{
     if (favs[id]){ await r.remove(); toast('Favorilerden çıkarıldı', 'info', 'x'); }
@@ -510,7 +517,8 @@ function calcListing(){
   $id('publishBtn').querySelector('span').textContent = ok ? 'Yayınla · ' + money(net) + ' kazanç' : 'Yayınla';
 }
 async function publishListing(){
-  if (!fbUser || !profile) return;
+  if (!fbUser) return;
+  if (!profile) return toast('Profilin yüklenemedi. Veritabanı kurallarını kontrol et.', 'err', 'x');
   const price = +($id('fPrice').value || '').replace(/[^0-9]/g, '');
   const t = $('#fTags .tchip.on');
   const data = { cat:$id('fCat').value, title:$id('fTitle').value.trim(), desc:$id('fDesc').value.trim(),
@@ -523,11 +531,12 @@ async function publishListing(){
     ups['users/' + uid() + '/tx/' + RDB.ref('users/' + uid() + '/tx').push().key] =
       { t:'İlan yayınlandı — ' + data.title.slice(0, 22), v:0, d:'%4 komisyon bekleniyor', at:SV.TIMESTAMP };
     await RDB.ref().update(ups);
-  }catch(e){ return toast('Yayınlama başarısız.', 'err', 'x'); }
+  }catch(e){ return toast('Yayınlama başarısız: ' + ((e && (e.message || e.code)) || 'bilinmeyen hata'), 'err', 'x'); }
   closeModal();
   $id('fTitle').value = ''; $id('fDesc').value = ''; $id('fPrice').value = ''; $id('fAgree').checked = false;
   $$('#fTags .tchip').forEach(e => e.classList.remove('on'));
   calcListing();
+  tab = 'aktif';
   go('ilanlarim');
   toast('İlanın yayında. Beklenen net kazancın ' + money(price * (1 - FEE)) + '.', 'ok', 'check');
 }
@@ -592,7 +601,8 @@ function unreadTotal(){
 }
 async function messageSeller(listingId){
   if (!needFB()) return;
-  if (!fbUser || !profile){ pendingPage = 'mesajlarim'; openAuthWall('Satıcıya mesaj atmak için hesabına giriş yap.'); return; }
+  if (!fbUser){ pendingPage = 'mesajlarim'; openAuthWall('Satıcıya mesaj atmak için hesabına giriş yap.'); return; }
+  if (!profile) return toast('Profilin yüklenemedi. Veritabanı kurallarını kontrol et.', 'err', 'x');
   const l = listings.find(x => x.id === listingId);
   if (!l) return;
   if (isMine(l)) return toast('Bu senin ilanın knk.', 'err', 'x');
@@ -652,11 +662,12 @@ function renderThreadList(){
   const arr = myTids.map(t => threadCache[t]).filter(Boolean);
   el.innerHTML = arr.length ? arr.map(t => {
     const last = (t.msgs ? Object.keys(t.msgs).map(k => t.msgs[k]) : []).pop() || {};
-    const prev = last.from === 'sys' ? '' : last.uname === myName() ? 'Sen: ' : (last.uname || t.seller) + ': ';
+    const peer = peerOf(t);
+    const prev = last.from === 'sys' ? '' : last.uname === myName() ? 'Sen: ' : (last.uname || peer) + ': ';
     return '<button class="th-item ' + (openThreadId === t.id ? 'is-on' : '') + '" data-tid="' + t.id + '">' +
-      '<span class="th-av">' + esc((t.seller || '?')[0].toUpperCase()) + '</span>' +
+      '<span class="th-av">' + esc(peer[0].toUpperCase()) + '</span>' +
       '<span class="th-txt">' +
-        '<span class="th-row1"><b>' + esc(t.seller) + '</b><time>' + (last.at ? dayLabel(last.at) : '') + '</time></span>' +
+        '<span class="th-row1"><b>' + esc(peer) + '</b><time>' + (last.at ? dayLabel(last.at) : '') + '</time></span>' +
         '<span class="th-sub">' + esc((t.title || '').slice(0, 30)) + '</span>' +
         '<span class="th-last">' + esc(prev + (last.text || '')) + '</span>' +
       '</span>' +
@@ -690,12 +701,13 @@ function renderThreads(){
     return;
   }
   clearUnread(t);
+  const peer = peerOf(t);
   $id('threadEmpty').hidden = true;
   $id('threadInner').hidden = false;
   $id('threadView').classList.add('is-open');
-  $id('thName').textContent = t.seller;
+  $id('thName').textContent = peer;
   $id('thListing').textContent = (t.title || '').slice(0, 46);
-  $id('thAv').textContent = (t.seller || '?')[0].toUpperCase();
+  $id('thAv').textContent = peer[0].toUpperCase();
   renderThreadBody(t);
 }
 
@@ -746,7 +758,8 @@ function renderGeneral(){
 }
 async function sendGeneral(text){
   if (!needFB()) return;
-  if (!fbUser || !profile){ pendingPage = 'mesajlarim'; openAuthWall('Genel sohbete katılmak için giriş yap.'); return; }
+  if (!fbUser){ pendingPage = 'mesajlarim'; openAuthWall('Genel sohbete katılmak için giriş yap.'); return; }
+  if (!profile) return toast('Profilin yüklenemedi. Veritabanı kurallarını kontrol et.', 'err', 'x');
   text = (text || '').trim();
   if (!text) return;
   try{ await RDB.ref('general').push({ uid:uid(), uname:profile.user, text:text.slice(0, 300), at:SV.TIMESTAMP }); }
@@ -968,6 +981,28 @@ async function resetData(){
   }catch(e){ toast('Silme başarısız.', 'err', 'x'); }
 }
 
+/* ---------- bağlantı kendi kendine testi ---------- */
+async function selfTest(){
+  const out = [];
+  const put = s => { out.push(s); $id('testOut').innerHTML = out.join('<br>'); };
+  $id('testOut').innerHTML = 'Test çalışıyor…';
+  if (!FB_OK){ put('1) Firebase SDK: YÜKLENEMEDİ (internet ya da script hatası)'); return; }
+  put('1) Firebase SDK: tamam');
+  if (!fbUser){ put('2) Giriş: YOK — önce giriş yap'); return; }
+  put('2) Giriş: tamam (' + fbUser.email + ')');
+  try{
+    await RDB.ref('listings').limitToFirst(1).get();
+    put('3) İlan okuma: tamam');
+  }catch(e){ put('3) İlan okuma: HATA (' + ((e && e.code) || e.message || e) + ')'); }
+  try{
+    const p = RDB.ref('users/' + uid() + '/_probe');
+    await p.set({ at:Date.now() });
+    await p.remove();
+    put('4) Yazma yetkisi: tamam');
+  }catch(e){ put('4) Yazma yetkisi: HATA (' + ((e && e.code) || e.message || e) + ')'); }
+  put(profile ? '5) Profil: yüklendi (@' + profile.user + ')' : '5) Profil: YÜKLENEMEDİ — Rules kısmını kontrol et');
+}
+
 /* ---------- destek ---------- */
 const BOT_REPLIES = [
   [/komisyon|oran|nedir/i, 'Her satışta <b>%4</b> komisyon alıyoruz. Gizli kesinti yok: 1.500 TL fiyata 60 TL komisyon, 1.440 TL satıcıya geçiyor.'],
@@ -1072,7 +1107,13 @@ function init(){
       detachUser();
       profile = null; favs = {}; txList = []; threadCache = {}; myTids = [];
       openThreadId = null;
-      if (u){ attachUser(u.uid); attachGeneral(); }
+      if (u){
+        attachUser(u.uid); attachGeneral();
+        setTimeout(() => {
+          if (fbUser && fbUser.uid === u.uid && !profile)
+            toast('Verilerin yüklenemedi. Firebase Rules kısmını kontrol et.', 'err', 'x');
+        }, 7000);
+      }
       else { detachGeneral(); }
       applyLockState();
       paintAccount();
@@ -1194,6 +1235,7 @@ function init(){
   $id('avatarRemove').onclick = removeAvatar;
   $id('logoutBtn').onclick = logout;
   $id('resetData').onclick = resetData;
+  $id('testConn').onclick = selfTest;
   $id('avatarFile').addEventListener('change', async e => {
     const f = e.target.files[0];
     if (!f || !fbUser) return;
